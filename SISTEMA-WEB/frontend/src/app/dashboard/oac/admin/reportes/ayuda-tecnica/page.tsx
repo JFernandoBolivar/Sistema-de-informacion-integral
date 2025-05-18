@@ -17,7 +17,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 export default function AyudaTecnicaReportPage() {
   const router = useRouter();
 
-  // Sample data for technical assistance report
+  // Datos de muestra para reporte de ayuda técnica
   const statusData = [
     { label: 'Pendiente', count: 15, color: '#FBBF24' },
     { label: 'Aprobada', count: 25, color: '#34D399' },
@@ -25,27 +25,32 @@ export default function AyudaTecnicaReportPage() {
     { label: 'Vencida', count: 5, color: '#8B5CF6' },
   ];
 
+  // Datos de evolución mensual por estado
   const timelineData = {
     labels: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio'],
     datasets: [
+      // Tendencia de solicitudes pendientes
       {
         label: 'Pendientes',
         data: [12, 15, 10, 18, 14, 15],
         color: 'rgba(251, 191, 36, 0.5)',
         borderColor: 'rgb(251, 191, 36)',
       },
+      // Tendencia de solicitudes aprobadas
       {
         label: 'Aprobadas',
         data: [18, 22, 25, 20, 24, 25],
         color: 'rgba(52, 211, 153, 0.5)',
         borderColor: 'rgb(52, 211, 153)',
       },
+      // Tendencia de solicitudes rechazadas
       {
         label: 'Rechazadas',
         data: [5, 8, 6, 7, 9, 8],
         color: 'rgba(248, 113, 113, 0.5)',
         borderColor: 'rgb(248, 113, 113)',
       },
+      // Tendencia de solicitudes vencidas
       {
         label: 'Vencidas',
         data: [2, 3, 4, 5, 4, 5],
@@ -55,7 +60,7 @@ export default function AyudaTecnicaReportPage() {
     ],
   };
 
-  // Calculate total for reference
+  // Calcular total para referencia
   const totalRequests = statusData.reduce((sum, item) => sum + item.count, 0);
 
   return (

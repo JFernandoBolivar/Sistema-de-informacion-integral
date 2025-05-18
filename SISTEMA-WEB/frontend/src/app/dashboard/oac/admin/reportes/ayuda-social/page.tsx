@@ -17,7 +17,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 export default function AyudaSocialReportPage() {
   const router = useRouter();
 
-  // Sample data for social assistance report
+  // Datos de muestra para reporte de ayuda social
   const statusData = [
     { label: 'Pendiente', count: 20, color: '#FBBF24' },
     { label: 'Aprobada', count: 30, color: '#34D399' },
@@ -25,27 +25,32 @@ export default function AyudaSocialReportPage() {
     { label: 'Vencida', count: 7, color: '#8B5CF6' },
   ];
 
+  // Datos de evolución mensual por estado
   const timelineData = {
     labels: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio'],
     datasets: [
+      // Tendencia de solicitudes pendientes
       {
         label: 'Pendientes',
         data: [15, 18, 12, 20, 18, 20],
         color: 'rgba(251, 191, 36, 0.5)',
         borderColor: 'rgb(251, 191, 36)',
       },
+      // Tendencia de solicitudes aprobadas
       {
         label: 'Aprobadas',
         data: [22, 25, 28, 26, 30, 30],
         color: 'rgba(52, 211, 153, 0.5)',
         borderColor: 'rgb(52, 211, 153)',
       },
+      // Tendencia de solicitudes rechazadas
       {
         label: 'Rechazadas',
         data: [8, 10, 12, 9, 14, 12],
         color: 'rgba(248, 113, 113, 0.5)',
         borderColor: 'rgb(248, 113, 113)',
       },
+      // Tendencia de solicitudes vencidas
       {
         label: 'Vencidas',
         data: [3, 5, 6, 7, 8, 7],
@@ -55,7 +60,7 @@ export default function AyudaSocialReportPage() {
     ],
   };
 
-  // Calculate total for reference
+  // Calcular total para referencia
   const totalRequests = statusData.reduce((sum, item) => sum + item.count, 0);
 
   return (

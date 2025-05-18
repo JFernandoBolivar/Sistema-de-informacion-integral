@@ -32,12 +32,12 @@ import { VisuallyHidden } from "@/components/ui/visually-hidden";
 
 export function Sidebar() {
   const { userData, isAdmin, logout } = useAuth();
-  const [isOpen, setIsOpen] = useState(false); // Control del menú móvil
-  const [isCollapsed, setIsCollapsed] = useState(false); // Control del modo colapsado
+  const [isOpen, setIsOpen] = useState(false); // Menú móvil
+  const [isCollapsed, setIsCollapsed] = useState(false); // Modo colapsado
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
 
   const userDepartment = userData?.department || "";
-  // Determina si el usuario tiene permisos administrativos
+  // Determina permisos administrativos
   const userIsAdmin =
     isAdmin ||
     userData?.status === "admin" ||
@@ -54,7 +54,6 @@ export function Sidebar() {
     await logout();
   };
 
-// Estructura para los enlaces de navegación
 interface NavLink {
   href: string;
   label: string;
@@ -76,7 +75,7 @@ const getNavLinks = () => {
 
     const departmentLinks = [];
 
-    // Navegación para OAC según el rol
+    // Navegación OAC según rol
     if (userDepartment === "oac") {
       if (userIsAdmin) {
         departmentLinks.push(
@@ -133,7 +132,7 @@ const getNavLinks = () => {
       }
     }
 
-    // Navegación para Farmacia
+    // Navegación Farmacia
     else if (userDepartment === "farmacia") {
       if (userIsAdmin) {
         departmentLinks.push(
@@ -157,7 +156,7 @@ const getNavLinks = () => {
       }
     }
 
-    // Navegación para Servicios Médicos
+    // Navegación Servicios Médicos
     else if (userDepartment === "servicios-medicos") {
       if (userIsAdmin) {
         departmentLinks.push(
@@ -207,7 +206,7 @@ const getNavLinks = () => {
               </Button>
             </div>
 
-            {/* Perfil del usuario */}
+            {/* Perfil */}
             <div className="px-2">
               {!isCollapsed ? (
                 <div className="flex flex-col">
@@ -292,7 +291,7 @@ const getNavLinks = () => {
                       )}
                     </Button>
                     
-                    {/* Submenú desplegable */}
+                    {/* Submenú */}
                     {!isCollapsed && expandedMenus[link.href] && (
                       <div className="ml-6 space-y-1 mt-1 mb-2">
                         {link.subItems.map((subItem) => (

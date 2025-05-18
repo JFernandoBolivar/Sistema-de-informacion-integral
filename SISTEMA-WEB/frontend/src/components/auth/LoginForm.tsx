@@ -27,11 +27,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-// Importar servicio de autenticación y contexto
 import { login } from "@/services/auth";
 import { useAuth } from "@/components/AuthProvider";
 
-// Define el esquema del formulario con Zod
+// Esquema de validación del formulario
 const loginFormSchema = z.object({
   cedula: z
     .string()
@@ -44,17 +43,16 @@ const loginFormSchema = z.object({
     .min(6, { message: "La contraseña debe tener al menos 6 caracteres" }),
 });
 
-// Define el tipo para los valores del formulario
+// Tipo para los valores del formulario
 type LoginFormValues = z.infer<typeof loginFormSchema>;
 
 export function LoginForm() {
   const router = useRouter();
-  const { isLoggedIn } = useAuth(); // Usar el contexto de autenticación
+  const { isLoggedIn } = useAuth();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Inicializar el formulario
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginFormSchema),
     defaultValues: {
@@ -63,48 +61,36 @@ export function LoginForm() {
     },
   });
 
-  // Manejar el envío del formulario
+  // Maneja el proceso de inicio de sesión
   async function onSubmit(data: LoginFormValues) {
     setIsLoading(true);
     setError(null);
 
     try {
-      // Verificar conectividad con el servidor primero
-      console.log('Verificando conectividad con el servidor...');
-      
-      // Llamar al servicio de autenticación con las credenciales
       const response = await login({
         cedula: data.cedula,
         password: data.password,
       });
       
-      // Login exitoso, mostrar información para depuración
-      console.log("Login exitoso:", response);
-      
-      // Mostrar mensaje de éxito temporal
       setError(null);
       
-      // Usar el enrutador de Next.js para navegar al dashboard
-      // La ruta depende del rol del usuario
+      // Determina la ruta según el rol del usuario
       let dashboardRoute = "/dashboard/oac";
       
       if (response.status === "superAdmin" || response.status === "admin") {
         dashboardRoute = "/dashboard/oac/admin";
       }
       
-      console.log(`Redirigiendo a: ${dashboardRoute}`);
-      
-      // Breve pausa para mostrar mensaje de éxito
+      // Redirección con breve pausa
       setTimeout(() => {
         router.push(dashboardRoute);
-        // Guardar la ruta inicial como última ruta válida
+        // Almacena la última ruta válida
         sessionStorage.setItem('lastValidRoute', dashboardRoute);
       }, 500);
       
-      // El estado de carga se mantendrá durante la navegación
       return;
     } catch (err: any) {
-      // Manejar errores específicos
+      // Manejo de errores específicos de autenticación
       if (err && err.message) {
         if (err.message.includes("inválidas") || 
             err.message.includes("no encontrado")) {
@@ -117,7 +103,6 @@ export function LoginForm() {
       } else {
         setError("Error al iniciar sesión. Intente nuevamente.");
       }
-      console.error("Error de login:", err);
       setIsLoading(false);
     }
   }

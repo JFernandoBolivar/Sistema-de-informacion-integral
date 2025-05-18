@@ -17,7 +17,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 export default function AyudaMedicaReportPage() {
   const router = useRouter();
 
-  // Sample data for medical assistance report
+  // Datos de muestra para reporte de ayuda médica
   const statusData = [
     { label: 'Pendiente', count: 25, color: '#FBBF24' },
     { label: 'Aprobada', count: 35, color: '#34D399' },
@@ -25,27 +25,32 @@ export default function AyudaMedicaReportPage() {
     { label: 'Vencida', count: 8, color: '#8B5CF6' },
   ];
 
+  // Datos de evolución mensual por estado
   const timelineData = {
     labels: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio'],
     datasets: [
+      // Tendencia de solicitudes pendientes
       {
         label: 'Pendientes',
         data: [18, 22, 20, 25, 23, 25],
         color: 'rgba(251, 191, 36, 0.5)',
         borderColor: 'rgb(251, 191, 36)',
       },
+      // Tendencia de solicitudes aprobadas
       {
         label: 'Aprobadas',
         data: [25, 28, 32, 30, 35, 35],
         color: 'rgba(52, 211, 153, 0.5)',
         borderColor: 'rgb(52, 211, 153)',
       },
+      // Tendencia de solicitudes rechazadas
       {
         label: 'Rechazadas',
         data: [10, 12, 15, 12, 15, 15],
         color: 'rgba(248, 113, 113, 0.5)',
         borderColor: 'rgb(248, 113, 113)',
       },
+      // Tendencia de solicitudes vencidas
       {
         label: 'Vencidas',
         data: [4, 6, 7, 8, 9, 8],
@@ -55,7 +60,7 @@ export default function AyudaMedicaReportPage() {
     ],
   };
 
-  // Calculate total for reference
+  // Calcular total para referencia
   const totalRequests = statusData.reduce((sum, item) => sum + item.count, 0);
 
   return (

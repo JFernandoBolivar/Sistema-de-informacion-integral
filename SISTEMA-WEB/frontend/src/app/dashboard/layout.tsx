@@ -23,8 +23,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   // Verificación básica de autenticación
   useEffect(() => {
     if (!loading && !isLoggedIn) {
-      console.log('Usuario no autenticado, redirigiendo a la página de inicio');
-      router.push('/');
+      console.log("Usuario no autenticado, redirigiendo a la página de inicio");
+      router.push("/");
     }
   }, [isLoggedIn, loading, router]);
 
@@ -51,12 +51,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       <Sidebar />
       <div className="flex flex-col flex-1">
         <main className="flex-grow p-6 pt-16 lg:pt-6 overflow-auto">
-          <div className="container mx-auto max-w-7xl">
-            {children}
-          </div>
+          <div className="container mx-auto max-w-7xl">{children}</div>
         </main>
         <footer className="bg-muted/50 p-4 text-center text-sm text-muted-foreground">
-          Sistema de Organización y Administración Comunitaria © {new Date().getFullYear()}
+          Sistema de Informacion Integral © {new Date().getFullYear()}
         </footer>
       </div>
     </div>

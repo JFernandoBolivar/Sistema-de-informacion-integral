@@ -28,7 +28,7 @@ import {
 
 import { registerUser } from "@/services/auth";
 
-// Nombres descriptivos para los departamentos en la interfaz
+// Etiquetas de departamentos
 const departmentLabels: Record<string, string> = {
   'oac': 'Organización y Administración Comunitaria',
   'farmacia': 'Farmacia',
@@ -99,14 +99,12 @@ export function RegisterUserForm({ department, onSuccess }: RegisterUserFormProp
     },
   });
 
-  // Procesa el envío del formulario
   async function onSubmit(data: RegistrationFormValues) {
     setIsLoading(true);
     setError(null);
     setSuccess(false);
 
     try {
-      // Prepara datos para el registro
       const registrationData = {
         cedula: data.cedula,
         nombre: data.nombre,
@@ -122,7 +120,6 @@ export function RegisterUserForm({ department, onSuccess }: RegisterUserFormProp
 
       const response = await registerUser(registrationData);
       
-      // Manejo del registro exitoso
       setSuccess(true);
       setRegisteredUser(`${data.nombre} ${data.apellido}`);
       
@@ -145,7 +142,6 @@ export function RegisterUserForm({ department, onSuccess }: RegisterUserFormProp
       } else {
         setError("Error al registrar usuario. Intente nuevamente.");
       }
-      console.error("Error de registro:", err);
     } finally {
       setIsLoading(false);
     }
