@@ -105,8 +105,8 @@ export function Sidebar() {
                 label: "Ayuda Social",
               },
               {
-                href: "/dashboard/oac/admin/reportes/medicamentos",
-                label: "Medicamentos",
+                href: "/dashboard/oac/admin/reportes/ayuda-medica",
+                label: "Ayuda Médica",
               },
               {
                 href: "/dashboard/oac/admin/reportes/proyectos",

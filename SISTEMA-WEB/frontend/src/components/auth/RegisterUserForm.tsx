@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -35,6 +35,35 @@ const departmentLabels: Record<string, string> = {
   "servicios-medicos": "Servicios Médicos",
 };
 
+// Función para normalizar el departamento 
+// (convertir nombre completo a código si es necesario)
+const normalizeDepartment = (department: string): string => {
+  // Si ya es un código válido, devolverlo directamente
+  if (['oac', 'farmacia', 'servicios-medicos'].includes(department)) {
+    return department;
+  }
+  
+  // Buscar el código correspondiente al nombre completo
+  const entry = Object.entries(departmentLabels).find(
+    ([_, label]) => label === department
+  );
+  
+  // Si se encuentra, devolver el código
+  if (entry) {
+    return entry[0];
+  }
+  
+  // Si no se encuentra, devolver el valor original
+  console.warn(`Departamento no reconocido: ${department}`);
+  return department;
+};
+
+// Función para limpiar cadenas de entrada
+const cleanInputString = (input: string): string => {
+  if (!input) return '';
+  return input.trim();
+};
+
 // Esquema de validación del formulario
 const registrationFormSchema = z
   .object({
@@ -55,7 +84,8 @@ const registrationFormSchema = z
     email: z
       .string()
       .min(1, { message: "El correo electrónico es requerido" })
-      .email({ message: "Ingrese un correo electrónico válido" }),
+      .email({ message: "Ingrese un correo electrónico válido" })
+      .transform((val) => val.trim()),
     phone: z
       .string()
       .min(1, { message: "El teléfono es requerido" })
@@ -91,6 +121,20 @@ export function RegisterUserForm({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
   const [registeredUser, setRegisteredUser] = useState<string | null>(null);
+  
+  // Normalizar el departamento para asegurar que usamos el código correcto
+  const normalizedDepartment = normalizeDepartment(department);
+  
+  // Validar que el departamento normalizado sea válido
+  useEffect(() => {
+    if (!['oac', 'farmacia', 'servicios-medicos'].includes(normalizedDepartment)) {
+      console.error(`Departamento inválido: ${department} (normalizado a: ${normalizedDepartment})`);
+      setError(`El departamento especificado no es válido: ${department}`);
+    } else if (error && error.includes('departamento')) {
+      // Limpiar error de departamento si ahora es válido
+      setError(null);
+    }
+  }, [department, normalizedDepartment, error]);
 
   const form = useForm<RegistrationFormValues>({
     resolver: zodResolver(registrationFormSchema),
@@ -110,19 +154,54 @@ export function RegisterUserForm({
     setError(null);
     setSuccess(false);
 
+    // Mostrar en consola los datos que se intentan enviar (sin contraseña)
+    console.log('Intentando registrar usuario con datos:', {
+      cedula: data.cedula,
+      nombre: data.nombre,
+      apellido: data.apellido,
+      email: data.email,
+      phone: data.phone,
+      department: department,
+      // No mostrar datos sensibles
+      password: '*****',
+      confirmPassword: '*****'
+    });
+
     try {
+      // Verificar si el departamento es válido antes de enviarlo
+      if (!['oac', 'farmacia', 'servicios-medicos'].includes(normalizedDepartment)) {
+        throw new Error(`El departamento "${department}" no es válido. Debe ser uno de: OAC, Farmacia, Servicios Médicos.`);
+      }
+      
+      // Limpiar el correo electrónico
+      const cleanedEmail = data.email.trim();
+      console.log('Email antes de enviar:', {
+        original: data.email,
+        limpio: cleanedEmail
+      });
+
+      // La validación principal ya se realiza en el esquema Zod
+      if (!cleanedEmail) {
+        throw new Error("El correo electrónico es requerido");
+      }
+      
       const registrationData = {
         cedula: data.cedula,
         nombre: data.nombre,
         apellido: data.apellido,
-        email: data.email,
+        email: cleanedEmail,
         phone: data.phone,
         password: data.password,
         confirmPassword: data.confirmPassword,
-        department: department,
+        department: normalizedDepartment, // Usar el valor normalizado
         status: "basic",
         username: `user_${data.cedula}`,
       };
+      
+      console.log('Enviando departamento normalizado:', {
+        original: department,
+        normalizado: normalizedDepartment
+      });
 
       const response = await registerUser(registrationData);
 
@@ -143,8 +222,28 @@ export function RegisterUserForm({
         onSuccess();
       }
     } catch (err: any) {
+      console.error('Error completo de registro:', err);
+      
+      // Verificar si estamos autenticados
+      const isLoggedIn = localStorage.getItem('auth_token') !== null;
+      console.log('Estado de autenticación:', isLoggedIn ? 'Autenticado' : 'No autenticado');
+      
       if (err && err.message) {
-        setError(err.message);
+        const cleanErrorMessage = err.message.trim();
+        
+        console.log('Procesando mensaje de error:', {
+          original: err.message,
+          limpio: cleanErrorMessage
+        });
+        
+        // Verificar el tipo de error
+        if (cleanErrorMessage.includes('ya existe') || cleanErrorMessage.includes('already exists')) {
+          setError('El correo electrónico ya está registrado en el sistema');
+        } else if (cleanErrorMessage.includes('token') || cleanErrorMessage.includes('autenticación')) {
+          setError('Error de autenticación: Debe iniciar sesión como administrador para registrar usuarios');
+        } else {
+          setError(cleanErrorMessage);
+        }
       } else {
         setError("Error al registrar usuario. Intente nuevamente.");
       }
@@ -160,7 +259,10 @@ export function RegisterUserForm({
           Registrar nuevo usuario
         </CardTitle>
         <CardDescription className="text-center">
-          Departamento: {departmentLabels[department] || department}
+          Departamento: {departmentLabels[normalizedDepartment] || department}
+          {normalizedDepartment !== department && (
+            <span className="text-xs block text-muted-foreground">(Código interno: {normalizedDepartment})</span>
+          )}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -169,7 +271,7 @@ export function RegisterUserForm({
             <CheckCircle className="h-5 w-5" />
             <span>
               Usuario <strong>{registeredUser}</strong> registrado exitosamente
-              en {departmentLabels[department] || department}.
+              en {departmentLabels[normalizedDepartment] || department}.
             </span>
           </div>
         )}
@@ -235,13 +337,28 @@ export function RegisterUserForm({
                   <FormLabel>Correo Electrónico</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Ej: usuario@ejemplo.com"
+                      placeholder="nombre@dominio.com"
                       type="email"
                       {...field}
+                      onChange={(e) => {
+                        // Solo aplicar trim para eliminar espacios
+                        const cleanedValue = e.target.value.trim();
+                        console.log('Cambio en campo email:', {
+                          valor: e.target.value,
+                          limpio: cleanedValue
+                        });
+                        field.onChange(cleanedValue);
+                      }}
+                      onBlur={(e) => {
+                        // También limpiar al perder el foco para garantizar datos limpios
+                        const cleanedValue = e.target.value.trim();
+                        field.onChange(cleanedValue);
+                        field.onBlur();
+                      }}
                     />
                   </FormControl>
                   <FormDescription>
-                    Para notificaciones y recuperación de cuenta
+                    Para notificaciones y recuperación de cuenta. Formato: nombre@dominio.com
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -350,7 +467,10 @@ export function RegisterUserForm({
             {error && (
               <div className="rounded-md bg-red-50 p-3 flex items-center space-x-2 text-sm text-red-500">
                 <AlertCircle className="h-4 w-4" />
-                <span>{error}</span>
+                <span>
+                  {/* Mensaje de error limpio */}
+                  {error}
+                </span>
               </div>
             )}
 
@@ -370,7 +490,7 @@ export function RegisterUserForm({
       <CardFooter className="flex justify-center text-xs text-muted-foreground">
         <p className="text-center">
           El usuario será registrado como usuario básico del departamento{" "}
-          {departmentLabels[department] || department}
+          {departmentLabels[normalizedDepartment] || department}
         </p>
       </CardFooter>
     </Card>

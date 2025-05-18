@@ -63,7 +63,7 @@ const DEV_SERVERS = [
 ];
 
 // Tiempo máximo de espera para conexiones (ms)
-const CONNECTION_TIMEOUT = 8000;
+const CONNECTION_TIMEOUT = 15000; // Aumentado a 15 segundos para permitir conexiones más lentas
 
 // Obtener la URL base actual
 const getApiUrl = (): string => {
@@ -338,11 +338,60 @@ export const getUserData = () => {
 export const registerUser = async (userData: RegistrationCredentials): Promise<RegistrationResponse> => {
   try {
     log(`Intentando registrar nuevo usuario para el departamento: ${userData.department}`);
+    log('Iniciando registro de usuario con datos:', {
+      ...userData,
+      password: '[REDACTED]', // No logear la contraseña
+      confirmPassword: '[REDACTED]' // No logear la confirmación
+    });
+    
+    // Validar datos requeridos
+    if (!userData.cedula || !userData.email || !userData.password) {
+      log('Error de validación: Faltan campos requeridos');
+      throw new Error('Faltan campos requeridos para el registro');
+    }
+
+    // Limpiar espacios en blanco de las contraseñas
+    const password = userData.password.trim();
+    let confirmPassword = '';
+    
+    // Obtener y limpiar el campo de confirmación de contraseña, verificando ambos nombres posibles
+    if (userData.confirmPassword !== undefined) {
+      confirmPassword = userData.confirmPassword.trim();
+      log('Campo confirmPassword presente en los datos');
+    } else if (userData.confirm_password !== undefined) {
+      confirmPassword = userData.confirm_password.trim();
+      log('Campo confirm_password presente en los datos');
+    } else {
+      log('ADVERTENCIA: No se proporcionó campo de confirmación de contraseña');
+      confirmPassword = password; // Si no se proporciona, usar la misma contraseña
+    }
+    
+    // Verificar coincidencia de contraseñas
+    if (password !== confirmPassword) {
+      log('Error de validación: Las contraseñas no coinciden');
+      log('Longitud de password: ' + password.length + ', Longitud de confirmPassword: ' + confirmPassword.length);
+      throw new Error('Las contraseñas no coinciden. Por favor, verifique que ambas contraseñas sean exactamente iguales.');
+    }
     
     // Validar cédula: debe tener entre 8 y 10 dígitos
     const cedulaDigits = userData.cedula.replace(/\D/g, '');
     if (cedulaDigits.length < 8 || cedulaDigits.length > 10) {
+      log('Error de validación: La cédula no tiene el formato correcto');
       throw new Error('La cédula debe tener entre 8 y 10 dígitos.');
+    }
+    
+    // Validar formato de correo electrónico
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(userData.email)) {
+      log('Error de validación: El correo electrónico no tiene un formato válido');
+      throw new Error('El formato del correo electrónico no es válido');
+    }
+    
+    // Validar departamento
+    const validDepartments = ['oac', 'farmacia', 'servicios-medicos'];
+    if (!validDepartments.includes(userData.department)) {
+      log('Error de validación: Departamento inválido', userData.department);
+      throw new Error('El departamento especificado no es válido');
     }
     
     // Generar username usando el primer nombre + primera letra del apellido
@@ -396,9 +445,9 @@ export const registerUser = async (userData: RegistrationCredentials): Promise<R
       cedula: userData.cedula,
       username: generatedUsername,
       email: userData.email,
-      password: userData.password,
+      password: password, // Usar la versión limpia (trimmed)
       // Mapear confirm_password como lo espera el backend
-      confirm_password: userData.confirmPassword || userData.password,
+      confirm_password: confirmPassword, // Usar la versión limpia (trimmed)
       // Mapear nombres de campos como espera el backend
       first_name: userData.nombre,
       last_name: userData.apellido,
@@ -408,62 +457,221 @@ export const registerUser = async (userData: RegistrationCredentials): Promise<R
       status: 'basic', // Siempre registrar como usuario básico
     };
     
-    // Eliminar campos que no necesita el backend (usando nombres del frontend)
-    if ('confirmPassword' in dataToSend) {
-      delete dataToSend.confirmPassword;
-    }
-    if ('nombre' in dataToSend) {
-      delete dataToSend.nombre;
-    }
-    if ('apellido' in dataToSend) {
-      delete dataToSend.apellido;
-    }
-    
-    log('Datos preparados para envío:', dataToSend);
-    
-    // Crear un AbortController para manejar timeout
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), CONNECTION_TIMEOUT);
-    
-    const response = await fetch(`${API_URL}/api/register/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest',
-        // Incluir token de autenticación del administrador para autorizar el registro
-        'Authorization': `Token ${localStorage.getItem('auth_token') || ''}`,
+    // Asegurar que no hay propiedades undefined o null
+    Object.keys(dataToSend).forEach(key => {
+      if (dataToSend[key] === undefined || dataToSend[key] === null) {
+        delete dataToSend[key];
+      }
+    });
+
+    // Validación adicional detallada antes de enviar
+    console.log('Validación previa al envío:');
+    console.log('- Cédula:', { 
+      valor: dataToSend.cedula,
+      longitudCorrecta: dataToSend.cedula && dataToSend.cedula.replace(/\D/g, '').length >= 8 && dataToSend.cedula.replace(/\D/g, '').length <= 10
+    });
+    console.log('- Email:', { 
+      valor: dataToSend.email,
+      formatoValido: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(dataToSend.email || '')
+    });
+    console.log('- Nombre y apellido:', {
+      first_name: dataToSend.first_name,
+      last_name: dataToSend.last_name,
+    });
+    console.log('- Departamento:', {
+      valor: dataToSend.department,
+      esValido: ['oac', 'farmacia', 'servicios-medicos'].includes(dataToSend.department || '')
+    });
+    console.log('- Contraseñas coinciden:', dataToSend.password === dataToSend.confirm_password);
+    console.log('- Detalles de contraseñas:', {
+      longitudPassword: dataToSend.password.length,
+      longitudConfirmPassword: dataToSend.confirm_password.length,
+      passwordConEspacios: dataToSend.password.includes(' '),
+      confirmPasswordConEspacios: dataToSend.confirm_password.includes(' '),
+      primerosCaracteres: {
+        password: dataToSend.password.slice(0, 3) + '...',
+        confirmPassword: dataToSend.confirm_password.slice(0, 3) + '...'
       },
-      body: JSON.stringify(dataToSend),
-      credentials: USE_CREDENTIALS,
-      signal: controller.signal,
+      ultimosCaracteres: {
+        password: '...' + dataToSend.password.slice(-3),
+        confirmPassword: '...' + dataToSend.confirm_password.slice(-3)
+      }
     });
     
-    // Limpiar el timeout después de obtener la respuesta
-    clearTimeout(timeoutId);
+    log('Datos preparados para envío:', {
+      ...dataToSend,
+      password: '[REDACTED]',
+      confirm_password: '[REDACTED]'
+    });
     
-    if (!response.ok) {
-      // Si la respuesta no es exitosa, lanzar error con detalles
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Error al registrar usuario');
+    // Verificar token de autenticación
+    const authToken = localStorage.getItem('auth_token');
+    log('Estado del token de autenticación:', authToken ? 'Presente' : 'Ausente');
+    
+    if (!authToken) {
+      log('Error: No hay token de autenticación disponible');
+      throw new Error('No hay token de autenticación. Debe iniciar sesión como administrador.');
     }
     
-    // Procesar datos exitosos
-    const data = await response.json();
-    log('Registro exitoso:', data);
+    // Función de registro con reintentos
+    const attemptRegistration = async (registrationData, attempt = 1) => {
+      const MAX_ATTEMPTS = 3;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), CONNECTION_TIMEOUT);
+
+      try {
+        log(`Realizando petición POST a ${API_URL}/api/register/ (intento ${attempt} de ${MAX_ATTEMPTS})`);
+        
+        // Verificar headers de la petición
+        log('Headers de la petición:', {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': authToken ? 'Token presente' : 'Token ausente'
+        });
+        
+        const response = await fetch(`${API_URL}/api/register/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            // Incluir token de autenticación del administrador para autorizar el registro
+            'Authorization': `Token ${authToken}`,
+          },
+          body: JSON.stringify(registrationData),
+          credentials: USE_CREDENTIALS,
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+        return response;
+      } catch (error) {
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError' && attempt < MAX_ATTEMPTS) {
+          log(`Intento ${attempt} fallido por timeout, reintentando...`);
+          // Esperar un poco antes de reintentar (usando incremento exponencial)
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+          return attemptRegistration(registrationData, attempt + 1);
+        }
+        throw error;
+      }
+    };
     
+    // Usar la función de reintento
+    const response = await attemptRegistration(dataToSend);
+  
+    log('Respuesta del servidor:', {
+      status: response.status,
+      ok: response.ok,
+      statusText: response.statusText
+    });
+    
+    // Procesar la respuesta JSON (errores de parsing capturados por el catch exterior)
+    const responseData = await response.json();
+    
+    // Si la respuesta no es exitosa
+    if (!response.ok) {
+      log('Error del servidor:', responseData);
+      
+      // Registrar información detallada del error para depuración
+      console.error('Detalles completos del error:', responseData);
+      
+      // Extraer mensajes de error específicos del backend
+      let errorMessage = '';
+      
+      // Comprobar si hay errores específicos de campo
+      if (responseData.errors && typeof responseData.errors === 'object') {
+        // Construir mensaje de error con todos los campos con error
+        const errorFields = Object.entries(responseData.errors)
+          .map(([field, msgs]) => `${field}: ${Array.isArray(msgs) ? msgs.join(', ') : msgs}`)
+          .join('; ');
+        
+        errorMessage = `Errores de validación: ${errorFields}`;
+      } 
+      // Verificar si hay errores de campo directamente en el objeto de respuesta
+      else if (responseData.email || responseData.username || responseData.cedula) {
+        // Construir mensaje de error con los campos específicos
+        const errorFields = [];
+        
+        if (responseData.email) {
+          const emailErrors = Array.isArray(responseData.email) ? responseData.email.join(', ') : responseData.email;
+          // Detectar errores de email duplicado
+          if (emailErrors.toLowerCase().includes('already exists') || emailErrors.toLowerCase().includes('ya existe')) {
+            errorMessage = 'El correo electrónico ya está registrado en el sistema. Por favor:\n• Si esta cuenta le pertenece, utilice la opción "Olvidé mi contraseña" en la página de inicio de sesión\n• Si necesita crear una cuenta nueva, utilice un correo electrónico diferente';
+            throw new Error(errorMessage);
+          }
+          errorFields.push(`email: ${emailErrors}`);
+        }
+        
+        if (responseData.username) {
+          const usernameErrors = Array.isArray(responseData.username) ? responseData.username.join(', ') : responseData.username;
+          errorFields.push(`username: ${usernameErrors}`);
+        }
+        
+        if (responseData.cedula) {
+          const cedulaErrors = Array.isArray(responseData.cedula) ? responseData.cedula.join(', ') : responseData.cedula;
+          errorFields.push(`cedula: ${cedulaErrors}`);
+        }
+        
+        errorMessage = `Errores de validación: ${errorFields.join('; ')}`;
+      } else if (responseData.non_field_errors) {
+        // Errores generales no asociados a campos específicos
+        errorMessage = Array.isArray(responseData.non_field_errors) 
+          ? responseData.non_field_errors.join('; ')
+          : responseData.non_field_errors;
+      } else {
+        // Mantener el comportamiento original para otros tipos de errores
+        errorMessage = responseData.detail || 
+          responseData.message || 
+          responseData.error || 
+          `Error al registrar usuario (${response.status})`;
+      }
+      
+      throw new Error(errorMessage);
+    }
+  
+    // Procesar respuesta exitosa
+    log('Registro exitoso:', responseData);
+    
+    // Construir y retornar inmediatamente la respuesta de registro
     return {
-      ...data,
+      user_id: responseData.user_id || 0,
+      username: responseData.username || '',
+      status: responseData.status || 'basic',
+      department: responseData.department || '',
       success: true,
+      message: responseData.message || 'Usuario registrado exitosamente'
     };
   } catch (error) {
+    // Capturar y registrar el error
+    log('Error en la operación de registro:', error);
     console.error('Error completo de registro:', error);
     
-    // Manejar errores específicos
     if (error instanceof Error) {
+      // Errores de red específicos
+      if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+        throw new Error('Error de conexión con el servidor. Verifique su conexión a internet');
+      }
+      
+      // Errores de validación
+      if (error.message.includes('campos requeridos')) {
+        throw new Error('Por favor complete todos los campos requeridos');
+      }
+      
+      // Error de autenticación
+      if (error.message.includes('token') || error.message.includes('autenticación')) {
+        throw new Error('Error de autenticación. Por favor, inicie sesión nuevamente como administrador.');
+      }
+      
+      // Error de permisos
+      if (error.message.includes('permisos') || error.message.includes('authorization') || 
+          error.message.includes('autorización') || error.message.includes('401') || error.message.includes('403')) {
+        throw new Error('No tiene permisos para registrar usuarios. Verifique su sesión.');
+      }
+      
       // Error de timeout
       if (error.name === 'AbortError') {
-        throw new Error('La conexión con el servidor ha excedido el tiempo de espera. Intente nuevamente.');
+        throw new Error('No se pudo conectar con el servidor. Por favor, verifique su conexión a internet y que el servidor esté activo.');
       }
       
       // Error de CORS
@@ -479,18 +687,47 @@ export const registerUser = async (userData: RegistrationCredentials): Promise<R
         throw new Error('No se pudo conectar con el servidor. Verifique su conexión e intente nuevamente.');
       }
       
+      // PRIORIZAR VALIDACIÓN DE EMAIL - Verificar primero si hay error de email duplicado
+      if (error.message.includes('email') || 
+          error.message.includes('correo') || 
+          error.message.includes('e-mail')) {
+        if (error.message.toLowerCase().includes('already exists') || 
+            error.message.toLowerCase().includes('ya existe') ||
+            error.message.toLowerCase().includes('user with this email')) {
+          throw new Error('El correo electrónico ya está registrado en el sistema. Por favor:\n' +
+                         '• Si esta cuenta le pertenece, utilice la opción "Olvidé mi contraseña" en la página de inicio de sesión\n' + 
+                         '• Si necesita crear una cuenta nueva, utilice un correo electrónico diferente');
+        }
+        throw new Error('El formato del correo electrónico no es válido. Por favor, ingrese un correo válido.');
+      }
+      
+      
       // Errores específicos de registro
-      if (error.message.includes('ya existe') || error.message.includes('already exists')) {
-        if (error.message.toLowerCase().includes('cedula')) {
-          throw new Error('La cédula ya está registrada en el sistema.');
+      if (error.message.includes('ya existe') || 
+          error.message.includes('already exists') || 
+          error.message.includes('user with this') || 
+          error.message.includes('usuario con este')) {
+        
+        if (error.message.toLowerCase().includes('cedula') || 
+            error.message.toLowerCase().includes('cédula')) {
+          throw new Error('La cédula ya está registrada en el sistema. Por favor, use otra cédula.');
         }
-        if (error.message.toLowerCase().includes('email')) {
-          throw new Error('El correo electrónico ya está registrado en el sistema.');
+        
+        // Esta validación ya se realiza antes en el bloque prioritario de email
+        // Mantener la validación como respaldo por si acaso no se detectó en el bloque anterior
+        if (error.message.toLowerCase().includes('email') || 
+            error.message.toLowerCase().includes('correo') || 
+            error.message.toLowerCase().includes('e-mail')) {
+          throw new Error('El correo electrónico ya está registrado en el sistema. Por favor, use otro correo o solicite recuperar su contraseña.');
         }
-        if (error.message.toLowerCase().includes('username')) {
-          throw new Error('El nombre de usuario ya está registrado en el sistema.');
+        
+        if (error.message.toLowerCase().includes('username') || 
+            error.message.toLowerCase().includes('nombre de usuario') ||
+            error.message.toLowerCase().includes('user_')) {
+          throw new Error('El nombre de usuario ya está registrado en el sistema. Por favor, elija otro nombre de usuario.');
         }
-        throw new Error('Ya existe un usuario con estos datos en el sistema.');
+        
+        throw new Error('Ya existe un usuario con estos datos en el sistema. Por favor, verifique la información proporcionada.');
       }
       
       if (error.message.includes('departamento no válido') || error.message.includes('department')) {
@@ -498,22 +735,19 @@ export const registerUser = async (userData: RegistrationCredentials): Promise<R
       }
       
       if (error.message.includes('confirm_password') || error.message.includes('contraseña')) {
-        throw new Error('Las contraseñas no coinciden.');
+        throw new Error('Las contraseñas no coinciden. Asegúrese de que ambas contraseñas sean exactamente iguales, sin espacios adicionales al inicio o al final.');
       }
       
       if (error.message.includes('cedula')) {
         throw new Error('La cédula no es válida. Debe tener entre 8 y 10 dígitos.');
       }
       
-      if (error.message.includes('email')) {
-        throw new Error('El correo electrónico no es válido.');
-      }
-      
-      // Otro error con mensaje
+      // Otro error con mensaje descriptivo, relanzarlo
       throw new Error(`Error de registro: ${error.message}`);
     }
     
     // Error genérico sin mensaje específico
+    log('Error inesperado durante el registro', error);
     throw new Error('Error inesperado durante el registro. Intente nuevamente.');
   }
 };
