@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { useState, useRef, useEffect } from "react"
-import { useAuth } from "@/components/AuthProvider"
+import Link from "next/link";
+import { useState, useRef, useEffect } from "react";
+import { useAuth } from "@/components/AuthProvider";
 import {
   LogOut,
   User,
@@ -17,45 +17,66 @@ import {
   Bot,
   ChevronRight,
   ChevronLeft,
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Separator } from "@/components/ui/separator"
-import { VisuallyHidden } from "@/components/ui/visually-hidden"
+  FileText,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { VisuallyHidden } from "@/components/ui/visually-hidden";
 
-/**
- * Componente de navegación sidebar adaptable según el rol y departamento del usuario
- * - Muestra enlaces específicos según el rol (admin/básico)
- * - Adapta opciones según el departamento (OAC, Farmacia, Servicios Médicos)
- * - Incluye menú desplegable de usuario con logout
- * - Responsive: sidebar en desktop, drawer en mobile
- */
 export function Sidebar() {
-  const { userData, isAdmin, logout } = useAuth()
-  const [isOpen, setIsOpen] = useState(false)
-  const [isCollapsed, setIsCollapsed] = useState(false)
+  const { userData, isAdmin, logout } = useAuth();
+  const [isOpen, setIsOpen] = useState(false); // Control del menú móvil
+  const [isCollapsed, setIsCollapsed] = useState(false); // Control del modo colapsado
+  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
 
-  const userDepartment = userData?.department || ""
-  const userIsAdmin = isAdmin || userData?.status === "admin" || userData?.status === "superAdmin"
-
+  const userDepartment = userData?.department || "";
+  // Determina si el usuario tiene permisos administrativos
+  const userIsAdmin =
+    isAdmin ||
+    userData?.status === "admin" ||
+    userData?.status === "superAdmin";
+    
+  const toggleSubmenu = (href: string) => {
+    setExpandedMenus(prev => ({
+      ...prev,
+      [href]: !prev[href]
+    }));
+  };
 
   const handleLogout = async () => {
-    await logout()
-  }
+    await logout();
+  };
 
-  const getNavLinks = () => {
-    const commonLinks = [
+// Estructura para los enlaces de navegación
+interface NavLink {
+  href: string;
+  label: string;
+  icon: React.ReactNode;
+  subItems?: Array<{
+    href: string;
+    label: string;
+  }>;
+}
+
+const getNavLinks = () => {
+    const commonLinks: NavLink[] = [
       {
         href: "/dashboard",
         label: "Inicio",
         icon: <Home className="h-5 w-5" />,
       },
-    ]
+    ];
 
-    const departmentLinks = []
+    const departmentLinks = [];
 
-    // OAC Department Links
+    // Navegación para OAC según el rol
     if (userDepartment === "oac") {
       if (userIsAdmin) {
         departmentLinks.push(
@@ -70,6 +91,29 @@ export function Sidebar() {
             icon: <ClipboardList className="h-5 w-5" />,
           },
           {
+            href: "/dashboard/oac/admin/reportes",
+            label: "Reportes",
+            icon: <FileText className="h-5 w-5" />,
+            subItems: [
+              {
+                href: "/dashboard/oac/admin/reportes/ayuda-tecnica",
+                label: "Ayuda Técnica",
+              },
+              {
+                href: "/dashboard/oac/admin/reportes/ayuda-social",
+                label: "Ayuda Social",
+              },
+              {
+                href: "/dashboard/oac/admin/reportes/medicamentos",
+                label: "Medicamentos",
+              },
+              {
+                href: "/dashboard/oac/admin/reportes/proyectos",
+                label: "Proyectos",
+              },
+            ],
+          },
+          {
             href: "/dashboard/oac/admin/usuarios/registrar",
             label: "Registrar Usuarios",
             icon: <UserPlus className="h-5 w-5" />,
@@ -79,17 +123,17 @@ export function Sidebar() {
             label: "Permisos IA",
             icon: <Bot className="h-5 w-5" />,
           }
-        )
+        );
       } else {
         departmentLinks.push({
           href: "/dashboard/oac",
           label: "Panel OAC",
           icon: <Home className="h-5 w-5" />,
-        })
+        });
       }
     }
-    
-    // Farmacia Department Links
+
+    // Navegación para Farmacia
     else if (userDepartment === "farmacia") {
       if (userIsAdmin) {
         departmentLinks.push(
@@ -103,17 +147,17 @@ export function Sidebar() {
             label: "Registrar Usuarios",
             icon: <UserPlus className="h-5 w-5" />,
           }
-        )
+        );
       } else {
         departmentLinks.push({
           href: "/dashboard/farmacia",
           label: "Panel Farmacia",
           icon: <Pill className="h-5 w-5" />,
-        })
+        });
       }
     }
-    
-    // Servicios Médicos Department Links
+
+    // Navegación para Servicios Médicos
     else if (userDepartment === "servicios-medicos") {
       if (userIsAdmin) {
         departmentLinks.push(
@@ -127,28 +171,44 @@ export function Sidebar() {
             label: "Registrar Usuarios",
             icon: <UserPlus className="h-5 w-5" />,
           }
-        )
+        );
       } else {
         departmentLinks.push({
           href: "/dashboard/servicios-medicos",
           label: "Panel Médico",
           icon: <Stethoscope className="h-5 w-5" />,
-        })
+        });
       }
     }
 
-    return [...commonLinks, ...departmentLinks]
-  }
+    return [...commonLinks, ...departmentLinks];
+  };
 
-  const navLinks = getNavLinks()
+  const navLinks = getNavLinks();
 
   const SidebarContent = () => (
     <div className="flex h-full flex-col">
       <div className="flex flex-col flex-grow justify-between py-2">
         <div className="px-2 space-y-4">
-          {/* Top section with user info and collapse button */}
-          <div className="flex flex-col gap-1.5 mb-4">
-            <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-2 mb-4">
+            <div className="hidden lg:flex items-center justify-end px-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsCollapsed(!isCollapsed)}
+                className="h-9 w-9 hover:bg-accent/90 transition-colors duration-200"
+                aria-label={isCollapsed ? "Expandir" : "Colapsar"}
+              >
+                {isCollapsed ? (
+                  <ChevronRight className="h-5 w-5" />
+                ) : (
+                  <ChevronLeft className="h-5 w-5" />
+                )}
+              </Button>
+            </div>
+
+            {/* Perfil del usuario */}
+            <div className="px-2">
               {!isCollapsed ? (
                 <div className="flex flex-col">
                   <div className="font-medium truncate">
@@ -196,50 +256,93 @@ export function Sidebar() {
                   </div>
                 </div>
               )}
-              {/* Hide collapse button on mobile completely */}
-              <div className="hidden lg:flex items-center justify-end">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setIsCollapsed(!isCollapsed)}
-                  className="h-9 w-9 hover:bg-accent/90 transition-colors duration-200"
-                  aria-label={isCollapsed ? "Expandir" : "Colapsar"}
-                >
-                  {isCollapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
-                </Button>
-              </div>
             </div>
           </div>
 
           <Separator className="mb-3" />
 
-          {/* Navigation Links */}
           <div className="flex flex-col gap-1">
             {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setIsOpen(false)}
-                title={isCollapsed ? link.label : undefined}
-                className="block"
-              >
-                <Button
-                  variant="ghost"
-                  className={`${
-                    isCollapsed 
-                      ? "w-10 px-0 justify-center mx-auto hover:scale-105" 
-                      : "w-full justify-start px-3"
-                  } py-2 hover:bg-accent/90 transition-all duration-200`}
-                >
-                  {link.icon && <div className={`transition-transform duration-200 ${isCollapsed ? "scale-105" : ""}`}>{link.icon}</div>}
-                  {!isCollapsed && <span className="ml-2">{link.label}</span>}
-                </Button>
-              </Link>
+              <div key={link.href}>
+                {link.subItems ? (
+                  <div>
+                    <Button
+                      variant="ghost"
+                      onClick={() => toggleSubmenu(link.href)}
+                      className={`${
+                        isCollapsed
+                          ? "w-10 px-0 justify-center mx-auto hover:scale-105"
+                          : "w-full justify-start px-3"
+                      } py-2 hover:bg-accent/90 transition-all duration-200`}
+                    >
+                      {link.icon && (
+                        <div className={`transition-transform duration-200 ${isCollapsed ? "scale-105" : ""}`}>
+                          {link.icon}
+                        </div>
+                      )}
+                      {!isCollapsed && (
+                        <>
+                          <span className="ml-2 flex-1 text-left">{link.label}</span>
+                          <ChevronDown 
+                            className={`h-4 w-4 transition-transform ${
+                              expandedMenus[link.href] ? "rotate-180" : ""
+                            }`}
+                          />
+                        </>
+                      )}
+                    </Button>
+                    
+                    {/* Submenú desplegable */}
+                    {!isCollapsed && expandedMenus[link.href] && (
+                      <div className="ml-6 space-y-1 mt-1 mb-2">
+                        {link.subItems.map((subItem) => (
+                          <Link
+                            key={subItem.href}
+                            href={subItem.href}
+                            onClick={() => setIsOpen(false)}
+                            className="block"
+                          >
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="w-full justify-start px-3 py-1 text-sm"
+                            >
+                              {subItem.label}
+                            </Button>
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <Link
+                    href={link.href}
+                    onClick={() => setIsOpen(false)}
+                    title={isCollapsed ? link.label : undefined}
+                    className="block"
+                  >
+                    <Button
+                      variant="ghost"
+                      className={`${
+                        isCollapsed
+                          ? "w-10 px-0 justify-center mx-auto hover:scale-105"
+                          : "w-full justify-start px-3"
+                      } py-2 hover:bg-accent/90 transition-all duration-200`}
+                    >
+                      {link.icon && (
+                        <div className={`transition-transform duration-200 ${isCollapsed ? "scale-105" : ""}`}>
+                          {link.icon}
+                        </div>
+                      )}
+                      {!isCollapsed && <span className="ml-2">{link.label}</span>}
+                    </Button>
+                  </Link>
+                )}
+              </div>
             ))}
           </div>
         </div>
 
-        {/* Logout Button at Bottom */}
         <div className="mt-auto px-2 pt-4 pb-2">
           <Separator className="mb-3" />
           {!isCollapsed ? (
@@ -267,11 +370,11 @@ export function Sidebar() {
         </div>
       </div>
     </div>
-  )
+  );
 
   return (
     <>
-      {/* Mobile Trigger */}
+      {/* Navegación móvil */}
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetTrigger asChild className="lg:hidden">
           <Button
@@ -283,26 +386,26 @@ export function Sidebar() {
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="p-0 w-64">
-          <SheetTitle className="sr-only">
-            Menú de navegación
-          </SheetTitle>
+          <SheetTitle className="sr-only">Menú de navegación</SheetTitle>
           <ScrollArea className="h-full">
             <SidebarContent />
           </ScrollArea>
         </SheetContent>
       </Sheet>
 
-      {/* Desktop Sidebar */}
+      {/* Navegación escritorio */}
       <div className="hidden lg:block">
-        <div className={`h-screen border-r bg-background ${
-          isCollapsed ? 'w-[70px]' : 'w-64'}
-        } transition-all duration-300 ease-in-out`}>
+        <div
+          className={`h-screen border-r bg-background ${
+            isCollapsed ? "w-[70px]" : "w-64"
+          }
+        } transition-all duration-300 ease-in-out`}
+        >
           <ScrollArea className="h-full">
             <SidebarContent />
           </ScrollArea>
         </div>
       </div>
     </>
-  )
+  );
 }
-

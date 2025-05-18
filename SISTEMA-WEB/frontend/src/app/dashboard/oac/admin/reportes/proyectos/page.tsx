@@ -1,0 +1,180 @@
+"use client";
+
+import React from "react";
+import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
+import StatusChart from "@/components/reports/StatusChart";
+import { ArrowLeft, FileBarChart, Clock, Download } from "lucide-react";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
+
+export default function ProyectosReportPage() {
+  const router = useRouter();
+
+  // Sample data for projects report
+  const statusData = [
+    { label: 'Pendiente', count: 15, color: '#FBBF24' },
+    { label: 'Aprobada', count: 25, color: '#34D399' },
+    { label: 'Rechazada', count: 8, color: '#F87171' },
+    { label: 'Vencida', count: 5, color: '#8B5CF6' },
+  ];
+
+  const timelineData = {
+    labels: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio'],
+    datasets: [
+      {
+        label: 'Pendientes',
+        data: [12, 15, 13, 15, 14, 15],
+        color: 'rgba(251, 191, 36, 0.5)',
+        borderColor: 'rgb(251, 191, 36)',
+      },
+      {
+        label: 'Aprobadas',
+        data: [20, 22, 25, 23, 25, 25],
+        color: 'rgba(52, 211, 153, 0.5)',
+        borderColor: 'rgb(52, 211, 153)',
+      },
+      {
+        label: 'Rechazadas',
+        data: [6, 7, 8, 7, 9, 8],
+        color: 'rgba(248, 113, 113, 0.5)',
+        borderColor: 'rgb(248, 113, 113)',
+      },
+      {
+        label: 'Vencidas',
+        data: [2, 3, 4, 5, 5, 5],
+        color: 'rgba(139, 92, 246, 0.5)',
+        borderColor: 'rgb(139, 92, 246)',
+      },
+    ],
+  };
+
+  // Calculate total for reference
+  const totalRequests = statusData.reduce((sum, item) => sum + item.count, 0);
+
+  return (
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Reportes de Proyectos</h1>
+          <p className="text-muted-foreground">
+            Estadísticas y datos sobre las solicitudes de proyectos.
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          onClick={() => router.push("/dashboard/oac/admin/reportes")}
+          className="gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" /> Volver
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card className="bg-amber-50 border-amber-200">
+          <CardContent className="p-6 text-center">
+            <h3 className="text-lg font-medium text-amber-700">Pendientes</h3>
+            <p className="text-4xl font-bold text-amber-600">{statusData[0].count}</p>
+            <p className="text-sm text-amber-600 mt-1">{((statusData[0].count / totalRequests) * 100).toFixed(1)}% del total</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-green-50 border-green-200">
+          <CardContent className="p-6 text-center">
+            <h3 className="text-lg font-medium text-green-700">Aprobadas</h3>
+            <p className="text-4xl font-bold text-green-600">{statusData[1].count}</p>
+            <p className="text-sm text-green-600 mt-1">{((statusData[1].count / totalRequests) * 100).toFixed(1)}% del total</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-red-50 border-red-200">
+          <CardContent className="p-6 text-center">
+            <h3 className="text-lg font-medium text-red-700">Rechazadas</h3>
+            <p className="text-4xl font-bold text-red-600">{statusData[2].count}</p>
+            <p className="text-sm text-red-600 mt-1">{((statusData[2].count / totalRequests) * 100).toFixed(1)}% del total</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-purple-50 border-purple-200">
+          <CardContent className="p-6 text-center">
+            <h3 className="text-lg font-medium text-purple-700">Vencidas</h3>
+            <p className="text-4xl font-bold text-purple-600">{statusData[3].count}</p>
+            <p className="text-sm text-purple-600 mt-1">{((statusData[3].count / totalRequests) * 100).toFixed(1)}% del total</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Tabs defaultValue="charts" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 mb-4">
+          <TabsTrigger value="charts" className="flex items-center gap-2">
+            <FileBarChart className="h-4 w-4" />
+            Gráficos Estadísticos
+          </TabsTrigger>
+          <TabsTrigger value="timeline" className="flex items-center gap-2">
+            <Clock className="h-4 w-4" />
+            Tendencia Temporal
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="charts" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Distribución de Estados</CardTitle>
+              <CardDescription>
+                Análisis porcentual de solicitudes de proyectos por estado
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[400px]">
+                <StatusChart
+                  type="pie"
+                  statusData={statusData}
+                  height="100%"
+                />
+              </div>
+            </CardContent>
+            <CardFooter className="flex justify-between border-t pt-5 pb-3">
+              <p className="text-sm text-muted-foreground">
+                Actualizado: {new Date().toLocaleDateString()}
+              </p>
+              <Button variant="outline" size="sm" className="gap-2">
+                <Download className="h-4 w-4" /> Exportar
+              </Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="timeline" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Tendencia Temporal</CardTitle>
+              <CardDescription>
+                Evolución mensual de solicitudes de proyectos por estado
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[400px]">
+                <StatusChart
+                  type="line"
+                  timelineData={timelineData}
+                  height="100%"
+                />
+              </div>
+            </CardContent>
+            <CardFooter className="flex justify-between border-t pt-5 pb-3">
+              <p className="text-sm text-muted-foreground">
+                Período: Enero - Junio 2025
+              </p>
+              <Button variant="outline" size="sm" className="gap-2">
+                <Download className="h-4 w-4" /> Exportar
+              </Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}

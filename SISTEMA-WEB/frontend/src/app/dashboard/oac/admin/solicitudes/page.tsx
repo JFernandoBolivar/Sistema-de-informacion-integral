@@ -4,8 +4,6 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-import StatusChart from './StatusChart';
-import DepartmentLineChart from './DepartmentLineChart';
 
 export default function SolicitudesPage() {
   const router = useRouter();
@@ -73,28 +71,6 @@ export default function SolicitudesPage() {
                 </ul>
               </CardContent>
             </Card>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Estadísticas</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="p-4 bg-gray-100 rounded-lg">
-              <h3 className="font-medium mb-2">Solicitudes por departamento</h3>
-              <div className="h-40 flex items-center justify-center">
-                <DepartmentLineChart />
-              </div>
-            </div>
-            <div className="p-4 bg-gray-100 rounded-lg">
-              <h3 className="font-medium mb-2">Estado de solicitudes</h3>
-              <div className="h-40 flex items-center justify-center">
-                <StatusChart />
-              </div>
-            </div>
           </div>
         </CardContent>
       </Card>

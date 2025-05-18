@@ -3,24 +3,21 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Clock, ArrowLeft } from "lucide-react";
 
 const SolicitudesPendientes = () => {
   const router = useRouter();
-  const [currentTime, setCurrentTime] = useState(
-    new Date().toLocaleTimeString()
-  );
+  const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString());
 
-  // Update time every second
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTime(new Date().toLocaleTimeString());
     }, 1000);
-
     return () => clearInterval(interval);
   }, []);
 
-  // Demo data for pending requests
   const pendingRequests = [
     {
       id: "12345",
@@ -28,7 +25,7 @@ const SolicitudesPendientes = () => {
       beneficiario: "Bolivar Hurtado",
       departamento: "Tecnología",
       fecha: new Date().toLocaleDateString(),
-      cantidadItems: 5,
+      cantidadArticulos: 5,
     },
     {
       id: "12346",
@@ -36,75 +33,84 @@ const SolicitudesPendientes = () => {
       beneficiario: "Carlos Ramírez",
       departamento: "Recursos Humanos",
       fecha: new Date().toLocaleDateString(),
-      cantidadItems: 3,
+      cantidadArticulos: 3,
     },
   ];
 
   return (
-    <div className="container mx-auto p-6 bg-amber-100 my-12 rounded-xl  h-[calc(100vh-2rem)] overflow-y-auto custom-scrollbar">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Solicitudes Pendientes</h1>
-        <Button
-          variant="outline"
-          onClick={() => router.push("/dashboard/oac/admin/solicitudes")}
-        >
-          Volver
-        </Button>
-      </div>
-
-      {pendingRequests.map((request) => (
-        <div
-          key={request.id}
-          className="container shadow-xl/30 bg-gray-600   hover:border-gray-900 hover:bg-gray-700 mx-auto p-4 hover:shadow-xl/40 border border-gray-700 mt-6 rounded-xl select-none relative cursor-pointer"
-          onClick={() => {
-            router.push(
-              `/dashboard/oac/admin/solicitudes/pendientes/${request.id}`
-            );
-          }}
-        >
-          <div className="h-50 relative">
-            {/* Titulo de la solicitud */}
-            <h2 className="text-center text-2xl font-serif font-semibold mt-2 text-white">
-              <b>Solicitud #{request.id}</b>
-            </h2>
-
-            {/* Hora en la esquina superior derecha */}
-            <div className="absolute top-2 right-2 text-white text-lg rounded-3xl bg-gray-900 p-2 shadow-md">
-              {currentTime}
-            </div>
-
-            {/* Contenido centrado */}
-            <div className="flex flex-col items-center justify-center h-full text-white py-4">
-              <p className="text-xl font-bold mb-2">
-                <b>Solicitante:</b> {request.solicitante}
-              </p>
-              <p className="text-xl font-bold mb-2">
-                <b>Beneficiario:</b> {request.beneficiario}
-              </p>
-              <p className="text-xl font-bold mb-2">
-                <b>Departamento:</b> {request.departamento}
-              </p>
-              <p className="text-xl font-bold mb-2">
-                <b>Fecha:</b> {request.fecha}
-              </p>
-            </div>
-
-            <p className="absolute right-2 bottom-2 text-xl font-bold p-2 text-white">
-              <b>Cantidad de ítems:</b> {request.cantidadItems}
-            </p>
+    <div className="container mx-auto py-6">
+      <Card className="border-none shadow-none">
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-2xl">Solicitudes Pendientes</CardTitle>
+            <Button
+              variant="outline"
+              onClick={() => router.push("/dashboard/oac/admin/solicitudes")}
+              className="gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" /> Volver
+            </Button>
           </div>
-        </div>
-      ))}
+        </CardHeader>
+        <CardContent className="grid gap-4">
+          {pendingRequests.map((request) => (
+            <Card
+              key={request.id}
+              className="hover:shadow-md transition-all duration-200 cursor-pointer border border-border/50"
+              onClick={() => router.push(`/dashboard/oac/admin/solicitudes/pendientes/${request.id}`)}
+            >
+              <CardHeader className="relative pb-2">
+                <div className="absolute right-6 top-6">
+                  <Badge variant="outline" className="flex items-center gap-2">
+                    <Clock className="h-3 w-3" />
+                    {currentTime}
+                  </Badge>
+                </div>
+                <CardTitle className="text-xl font-semibold">
+                  Solicitud #{request.id}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="grid md:grid-cols-2 gap-4 pt-2">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between md:justify-start md:gap-2">
+                    <span className="font-medium text-muted-foreground">Solicitante:</span>
+                    <span>{request.solicitante}</span>
+                  </div>
+                  <div className="flex items-center justify-between md:justify-start md:gap-2">
+                    <span className="font-medium text-muted-foreground">Beneficiario:</span>
+                    <span>{request.beneficiario}</span>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between md:justify-start md:gap-2">
+                    <span className="font-medium text-muted-foreground">Departamento:</span>
+                    <span>{request.departamento}</span>
+                  </div>
+                  <div className="flex items-center justify-between md:justify-start md:gap-2">
+                    <span className="font-medium text-muted-foreground">Fecha:</span>
+                    <span>{request.fecha}</span>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter className="justify-end pt-2">
+                <Badge>
+                  {request.cantidadArticulos} artículos
+                </Badge>
+              </CardFooter>
+            </Card>
+          ))}
 
-      {pendingRequests.length === 0 && (
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle className="text-center">
-              No hay solicitudes pendientes
-            </CardTitle>
-          </CardHeader>
-        </Card>
-      )}
+          {pendingRequests.length === 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-center text-muted-foreground">
+                  No hay solicitudes pendientes
+                </CardTitle>
+              </CardHeader>
+            </Card>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };

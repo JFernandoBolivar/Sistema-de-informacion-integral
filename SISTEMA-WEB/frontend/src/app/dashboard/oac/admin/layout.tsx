@@ -1,33 +1,50 @@
 "use client";
 
-import { ReactNode, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { ReactNode, useEffect, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
-import { MainNav } from "@/components/navigation/MainNav";
+import { AccessDeniedMessage } from "@/components/AccessDeniedMessage";
 
 interface LayoutProps {
   children: ReactNode;
 }
 
 const Layout = ({ children }: LayoutProps) => {
-  const { userData, isAdmin, loading } = useAuth();
-  const router = useRouter();
+  const { userData, loading } = useAuth();
+  const [verifyingAccess, setVerifyingAccess] = useState(true);
 
-  // Verificar que el usuario tenga permisos de admin de OAC
   useEffect(() => {
     if (!loading) {
-      const hasAccess =
-        (userData?.status === "admin" || userData?.status === "superAdmin") &&
-        userData?.department === "oac";
-
-      if (!hasAccess) {
-        console.log(
-          "Redirigiendo: No tiene permisos para acceder al panel de admin OAC"
-        );
-        router.push("/dashboard/oac");
-      }
+      setVerifyingAccess(false);
     }
-  }, [userData, loading, router]);
+  }, [loading]);
+
+  // Si está cargando, mostrar pantalla de carga
+  if (loading || verifyingAccess) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-2">Verificando acceso...</h2>
+          <p className="text-muted-foreground">Por favor espere</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Verificar que el usuario tenga permisos de admin de OAC
+  const hasAccess =
+    (userData?.status === "admin" || userData?.status === "superAdmin") &&
+    userData?.department === "oac";
+
+  // Si no tiene permisos, mostrar mensaje de acceso denegado
+  if (!hasAccess) {
+    return (
+      <AccessDeniedMessage 
+        message="No tiene permisos administrativos para acceder a esta sección. Esta área está restringida a administradores del departamento de OAC."
+        redirectPath="/dashboard/oac"
+        redirectLabel="Volver al panel de OAC"
+      />
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen">

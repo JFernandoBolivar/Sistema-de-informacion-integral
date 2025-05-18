@@ -26,17 +26,16 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-// Importar servicio de autenticación
 import { registerUser } from "@/services/auth";
 
-// Mapeo de departamentos para mostrar nombres amigables
+// Nombres descriptivos para los departamentos en la interfaz
 const departmentLabels: Record<string, string> = {
   'oac': 'Organización y Administración Comunitaria',
   'farmacia': 'Farmacia',
   'servicios-medicos': 'Servicios Médicos'
 };
 
-// Define el esquema del formulario con Zod
+// Esquema de validación del formulario
 const registrationFormSchema = z.object({
   cedula: z
     .string()
@@ -71,13 +70,12 @@ const registrationFormSchema = z.object({
   path: ["confirmPassword"],
 });
 
-// Define el tipo para los valores del formulario
+// Tipo para los valores del formulario
 type RegistrationFormValues = z.infer<typeof registrationFormSchema>;
 
-// Props del componente
 interface RegisterUserFormProps {
-  department: string; // El departamento para el que se está registrando un usuario
-  onSuccess?: () => void; // Callback opcional al registrar con éxito
+  department: string; // Departamento para el registro
+  onSuccess?: () => void; // Callback opcional al completar registro
 }
 
 export function RegisterUserForm({ department, onSuccess }: RegisterUserFormProps) {
@@ -88,7 +86,6 @@ export function RegisterUserForm({ department, onSuccess }: RegisterUserFormProp
   const [success, setSuccess] = useState<boolean>(false);
   const [registeredUser, setRegisteredUser] = useState<string | null>(null);
 
-  // Inicializar el formulario
   const form = useForm<RegistrationFormValues>({
     resolver: zodResolver(registrationFormSchema),
     defaultValues: {
@@ -102,14 +99,14 @@ export function RegisterUserForm({ department, onSuccess }: RegisterUserFormProp
     },
   });
 
-  // Manejar el envío del formulario
+  // Procesa el envío del formulario
   async function onSubmit(data: RegistrationFormValues) {
     setIsLoading(true);
     setError(null);
     setSuccess(false);
 
     try {
-      // Preparar los datos para el registro
+      // Prepara datos para el registro
       const registrationData = {
         cedula: data.cedula,
         nombre: data.nombre,
@@ -118,19 +115,14 @@ export function RegisterUserForm({ department, onSuccess }: RegisterUserFormProp
         phone: data.phone,
         password: data.password,
         confirmPassword: data.confirmPassword,
-        department: department, // Usar el departamento pasado como prop
-        status: 'basic', // Siempre registrar como usuario básico
-        // Generar un username basado en la cédula si no se proporciona uno
+        department: department,
+        status: 'basic',
         username: `user_${data.cedula}`,
       };
 
-      // Llamar al servicio de registro
       const response = await registerUser(registrationData);
       
-      // Registro exitoso
-      console.log("Registro exitoso:", response);
-      
-      // Mostrar mensaje de éxito y limpiar el formulario
+      // Manejo del registro exitoso
       setSuccess(true);
       setRegisteredUser(`${data.nombre} ${data.apellido}`);
       
@@ -144,12 +136,10 @@ export function RegisterUserForm({ department, onSuccess }: RegisterUserFormProp
         confirmPassword: "",
       });
       
-      // Llamar al callback de éxito si existe
       if (onSuccess) {
         onSuccess();
       }
     } catch (err: any) {
-      // Manejar errores específicos
       if (err && err.message) {
         setError(err.message);
       } else {
@@ -195,7 +185,7 @@ export function RegisterUserForm({ department, onSuccess }: RegisterUserFormProp
                     />
                   </FormControl>
                   <FormDescription>
-                    Número de cédula del usuario sin puntos ni guiones
+                    Número de cédula sin puntos ni guiones
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -254,7 +244,7 @@ export function RegisterUserForm({ department, onSuccess }: RegisterUserFormProp
                     />
                   </FormControl>
                   <FormDescription>
-                    Correo electrónico para notificaciones y recuperación de cuenta
+                    Para notificaciones y recuperación de cuenta
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

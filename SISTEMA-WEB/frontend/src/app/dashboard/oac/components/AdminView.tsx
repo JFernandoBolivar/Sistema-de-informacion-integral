@@ -8,35 +8,7 @@ export default function AdminView() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Inventario Section */}
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader>
-            <CardTitle className="text-xl">Inventario</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <h3 className="font-medium">Gestión de Inventario</h3>
-                <ul className="list-disc list-inside space-y-1 text-sm">
-                  <li>Control de existencias</li>
-                  <li>Registro de entradas/salidas</li>
-                  <li>Categorización de productos</li>
-                </ul>
-              </div>
-              <div className="pt-4">
-                <Button
-                  className="w-full"
-                  variant="outline"
-                  onClick={() => router.push("/dashboard/oac/admin/inventario")}
-                >
-                  Ir a Inventario
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Solicitudes Section */}
+        {/* Solicitudes */}
         <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
             <CardTitle className="text-xl">Solicitudes</CardTitle>

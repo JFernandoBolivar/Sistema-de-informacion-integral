@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/table";
 
 // tipos de datos para el inventario
-interface InventoryItem {
+interface InventoryArticle {
   id: string;
   codigo: string;
   nombre: string;
@@ -36,7 +36,7 @@ interface InventoryItem {
 }
 
 // manejo de datos de inventario (simulación de base de datos)
-const inventoryData: InventoryItem[] = [
+const inventoryData: InventoryArticle[] = [
   {
     id: "1",
     codigo: "SR-001",
@@ -115,8 +115,8 @@ export default function InventarioPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<DialogMode>("create");
-  const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
-  const [formData, setFormData] = useState<Partial<InventoryItem>>({
+  const [editingArticle, setEditingArticle] = useState<InventoryArticle | null>(null);
+  const [formData, setFormData] = useState<Partial<InventoryArticle>>({
     codigo: "",
     nombre: "",
     categoria: "",
@@ -127,13 +127,13 @@ export default function InventarioPage() {
     fechaAdquisicion: new Date().toISOString().split("T")[0],
   });
 
-  const handleOpenDialog = (mode: DialogMode, item?: InventoryItem) => {
+  const handleOpenDialog = (mode: DialogMode, article?: InventoryArticle) => {
     setDialogMode(mode);
-    if (mode === "edit" && item) {
-      setEditingItem(item);
-      setFormData(item);
+    if (mode === "edit" && article) {
+      setEditingArticle(article);
+      setFormData(article);
     } else {
-      setEditingItem(null);
+      setEditingArticle(null);
       setFormData({
         codigo: "",
         nombre: "",
@@ -156,8 +156,8 @@ export default function InventarioPage() {
   };
 
   // filtro de busqueda de ayudas tecnicas
-  const filteredItems = inventoryData.filter((item) =>
-    Object.values(item).some((value) =>
+  const filteredArticles = inventoryData.filter((article) =>
+    Object.values(article).some((value) =>
       value.toString().toLowerCase().includes(searchTerm.toLowerCase())
     )
   );
@@ -188,11 +188,11 @@ export default function InventarioPage() {
               />
               <Button variant="outline">Exportar</Button>
               <Button onClick={() => handleOpenDialog("create")}>
-                Nuevo Item
+                Nuevo Artículo
               </Button>
             </div>
 
-            {/* Inventory Table */}
+            {/* Tabla de Inventario */}
             <div className="rounded-md border">
               <Table>
                 <TableHeader>
@@ -207,43 +207,43 @@ export default function InventarioPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredItems.map((item) => (
-                    <TableRow key={item.id}>
+                  {filteredArticles.map((article) => (
+                    <TableRow key={article.id}>
                       <TableCell className="font-medium">
-                        {item.codigo}
+                        {article.codigo}
                       </TableCell>
                       <TableCell>
                         <div>
-                          <div className="font-medium">{item.nombre}</div>
+                          <div className="font-medium">{article.nombre}</div>
                           <div className="text-sm text-gray-500">
-                            {item.descripcion}
+                            {article.descripcion}
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>{item.categoria}</TableCell>
+                      <TableCell>{article.categoria}</TableCell>
                       <TableCell>
                         <span
                           className={`px-2 py-1 rounded-full text-xs ${
-                            item.estado === "Disponible"
+                            article.estado === "Disponible"
                               ? "bg-green-100 text-green-800"
-                              : item.estado === "En uso"
+                              : article.estado === "En uso"
                               ? "bg-blue-100 text-blue-800"
-                              : item.estado === "Por entregar"
+                              : article.estado === "Por entregar"
                               ? "bg-yellow-100 text-yellow-800"
                               : "bg-red-100 text-red-800"
                           }`}
                         >
-                          {item.estado}
+                          {article.estado}
                         </span>
                       </TableCell>
-                      <TableCell>{item.cantidad}</TableCell>
-                      <TableCell>{item.factura}</TableCell>
+                      <TableCell>{article.cantidad}</TableCell>
+                      <TableCell>{article.factura}</TableCell>
                       <TableCell>
                         <div className="flex space-x-2">
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleOpenDialog("edit", item)}
+                            onClick={() => handleOpenDialog("edit", article)}
                           >
                             Editar
                           </Button>
@@ -262,12 +262,12 @@ export default function InventarioPage() {
               </Table>
             </div>
 
-            {/* Item Management Dialog */}
+            {/* Diálogo de Gestión de Artículos */}
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
                   <DialogTitle>
-                    {dialogMode === "create" ? "Nuevo Item" : "Editar Item"}
+                    {dialogMode === "create" ? "Nuevo Artículo" : "Editar Artículo"}
                   </DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleFormSubmit} className="space-y-4">
@@ -389,12 +389,12 @@ export default function InventarioPage() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Total Items</CardTitle>
+                  <CardTitle className="text-lg">Total Artículos</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-2xl font-bold">
                     {inventoryData.reduce(
-                      (sum, item) => sum + item.cantidad,
+                      (sum, article) => sum + article.cantidad,
                       0
                     )}
                   </p>
@@ -408,8 +408,8 @@ export default function InventarioPage() {
                 <CardContent>
                   <p className="text-2xl font-bold text-green-600">
                     {inventoryData
-                      .filter((item) => item.estado === "Disponible")
-                      .reduce((sum, item) => sum + item.cantidad, 0)}
+                      .filter((article) => article.estado === "Disponible")
+                      .reduce((sum, article) => sum + article.cantidad, 0)}
                   </p>
                 </CardContent>
               </Card>
@@ -421,8 +421,8 @@ export default function InventarioPage() {
                 <CardContent>
                   <p className="text-2xl font-bold text-blue-600">
                     {inventoryData
-                      .filter((item) => item.estado === "En uso")
-                      .reduce((sum, item) => sum + item.cantidad, 0)}
+                      .filter((article) => article.estado === "En uso")
+                      .reduce((sum, article) => sum + article.cantidad, 0)}
                   </p>
                 </CardContent>
               </Card>
@@ -434,8 +434,8 @@ export default function InventarioPage() {
                 <CardContent>
                   <p className="text-2xl font-bold text-yellow-600">
                     {inventoryData
-                      .filter((item) => item.estado === "Por entregar")
-                      .reduce((sum, item) => sum + item.cantidad, 0)}
+                      .filter((article) => article.estado === "Por entregar")
+                      .reduce((sum, article) => sum + article.cantidad, 0)}
                   </p>
                 </CardContent>
               </Card>

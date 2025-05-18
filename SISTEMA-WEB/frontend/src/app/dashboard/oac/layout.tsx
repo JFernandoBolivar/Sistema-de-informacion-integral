@@ -1,27 +1,45 @@
 "use client";
 
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
+import { AccessDeniedMessage } from "@/components/AccessDeniedMessage";
 
 /**
  * Layout específico para el departamento OAC
  * - Verifica que el usuario pertenezca al departamento OAC
- * - Redirige a /dashboard si no tiene permisos
+ * - Muestra mensaje de acceso denegado si no tiene permisos
  */
 export default function OACLayout({ children }: { children: ReactNode }) {
   const { userData, loading } = useAuth();
-  const router = useRouter();
+  const [verifyingAccess, setVerifyingAccess] = useState(true);
 
   useEffect(() => {
-    if (!loading && userData?.department !== 'oac') {
-      console.log('No tiene acceso al departamento OAC');
-      router.push('/dashboard');
+    if (!loading) {
+      setVerifyingAccess(false);
     }
-  }, [userData, loading, router]);
+  }, [loading]);
 
-  // Mientras se valida o si no tiene permisos, no mostrar nada
-  if (loading || userData?.department !== 'oac') return null;
+  // Si está cargando, mostrar pantalla de carga
+  if (loading || verifyingAccess) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-2">Verificando acceso...</h2>
+          <p className="text-muted-foreground">Por favor espere</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Si no tiene permisos, mostrar mensaje de acceso denegado
+  if (userData?.department !== 'oac') {
+    return (
+      <AccessDeniedMessage 
+        message="No tiene permisos para acceder al área de OAC. Esta sección está restringida al personal del departamento de OAC."
+      />
+    );
+  }
 
   // Usuario del departamento correcto: mostrar contenido
   return <>{children}</>;
