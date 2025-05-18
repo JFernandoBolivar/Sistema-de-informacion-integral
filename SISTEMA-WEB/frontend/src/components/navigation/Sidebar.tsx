@@ -34,7 +34,9 @@ export function Sidebar() {
   const { userData, isAdmin, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false); // Menú móvil
   const [isCollapsed, setIsCollapsed] = useState(false); // Modo colapsado
-  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
+  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>(
+    {}
+  );
 
   const userDepartment = userData?.department || "";
   // Determina permisos administrativos
@@ -42,11 +44,11 @@ export function Sidebar() {
     isAdmin ||
     userData?.status === "admin" ||
     userData?.status === "superAdmin";
-    
+
   const toggleSubmenu = (href: string) => {
-    setExpandedMenus(prev => ({
+    setExpandedMenus((prev) => ({
       ...prev,
-      [href]: !prev[href]
+      [href]: !prev[href],
     }));
   };
 
@@ -54,17 +56,17 @@ export function Sidebar() {
     await logout();
   };
 
-interface NavLink {
-  href: string;
-  label: string;
-  icon: React.ReactNode;
-  subItems?: Array<{
+  interface NavLink {
     href: string;
     label: string;
-  }>;
-}
+    icon: React.ReactNode;
+    subItems?: Array<{
+      href: string;
+      label: string;
+    }>;
+  }
 
-const getNavLinks = () => {
+  const getNavLinks = () => {
     const commonLinks: NavLink[] = [
       {
         href: "/dashboard",
@@ -118,8 +120,8 @@ const getNavLinks = () => {
             icon: <UserPlus className="h-5 w-5" />,
           },
           {
-            href: "/dashboard/oac/admin/ai-permissions",
-            label: "Permisos IA",
+            href: "/dashboard/oac/admin/Config-users",
+            label: "Configurar Usuarios",
             icon: <Bot className="h-5 w-5" />,
           }
         );
@@ -275,14 +277,20 @@ const getNavLinks = () => {
                       } py-2 hover:bg-accent/90 transition-all duration-200`}
                     >
                       {link.icon && (
-                        <div className={`transition-transform duration-200 ${isCollapsed ? "scale-105" : ""}`}>
+                        <div
+                          className={`transition-transform duration-200 ${
+                            isCollapsed ? "scale-105" : ""
+                          }`}
+                        >
                           {link.icon}
                         </div>
                       )}
                       {!isCollapsed && (
                         <>
-                          <span className="ml-2 flex-1 text-left">{link.label}</span>
-                          <ChevronDown 
+                          <span className="ml-2 flex-1 text-left">
+                            {link.label}
+                          </span>
+                          <ChevronDown
                             className={`h-4 w-4 transition-transform ${
                               expandedMenus[link.href] ? "rotate-180" : ""
                             }`}
@@ -290,7 +298,7 @@ const getNavLinks = () => {
                         </>
                       )}
                     </Button>
-                    
+
                     {/* Submenú */}
                     {!isCollapsed && expandedMenus[link.href] && (
                       <div className="ml-6 space-y-1 mt-1 mb-2">
@@ -329,11 +337,17 @@ const getNavLinks = () => {
                       } py-2 hover:bg-accent/90 transition-all duration-200`}
                     >
                       {link.icon && (
-                        <div className={`transition-transform duration-200 ${isCollapsed ? "scale-105" : ""}`}>
+                        <div
+                          className={`transition-transform duration-200 ${
+                            isCollapsed ? "scale-105" : ""
+                          }`}
+                        >
                           {link.icon}
                         </div>
                       )}
-                      {!isCollapsed && <span className="ml-2">{link.label}</span>}
+                      {!isCollapsed && (
+                        <span className="ml-2">{link.label}</span>
+                      )}
                     </Button>
                   </Link>
                 )}

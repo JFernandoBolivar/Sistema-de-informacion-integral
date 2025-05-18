@@ -30,45 +30,47 @@ import { registerUser } from "@/services/auth";
 
 // Etiquetas de departamentos
 const departmentLabels: Record<string, string> = {
-  'oac': 'Organización y Administración Comunitaria',
-  'farmacia': 'Farmacia',
-  'servicios-medicos': 'Servicios Médicos'
+  oac: "Organización y Administración Comunitaria",
+  farmacia: "Farmacia",
+  "servicios-medicos": "Servicios Médicos",
 };
 
 // Esquema de validación del formulario
-const registrationFormSchema = z.object({
-  cedula: z
-    .string()
-    .min(1, { message: "La cédula es requerida" })
-    .refine((val) => /^\d+$/.test(val), {
-      message: "La cédula debe contener solo números",
-    }),
-  nombre: z
-    .string()
-    .min(2, { message: "El nombre debe tener al menos 2 caracteres" })
-    .max(50, { message: "El nombre no puede exceder 50 caracteres" }),
-  apellido: z
-    .string()
-    .min(2, { message: "El apellido debe tener al menos 2 caracteres" })
-    .max(50, { message: "El apellido no puede exceder 50 caracteres" }),
-  email: z
-    .string()
-    .min(1, { message: "El correo electrónico es requerido" })
-    .email({ message: "Ingrese un correo electrónico válido" }),
-  phone: z
-    .string()
-    .min(1, { message: "El teléfono es requerido" })
-    .regex(/^\+?[0-9]{8,}$/, { message: "Ingrese un número de teléfono válido" }),
-  password: z
-    .string()
-    .min(6, { message: "La contraseña debe tener al menos 6 caracteres" }),
-  confirmPassword: z
-    .string()
-    .min(1, { message: "Confirme la contraseña" })
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Las contraseñas no coinciden",
-  path: ["confirmPassword"],
-});
+const registrationFormSchema = z
+  .object({
+    cedula: z
+      .string()
+      .min(1, { message: "La cédula es requerida" })
+      .refine((val) => /^\d+$/.test(val), {
+        message: "La cédula debe contener solo números",
+      }),
+    nombre: z
+      .string()
+      .min(2, { message: "El nombre debe tener al menos 2 caracteres" })
+      .max(50, { message: "El nombre no puede exceder 50 caracteres" }),
+    apellido: z
+      .string()
+      .min(2, { message: "El apellido debe tener al menos 2 caracteres" })
+      .max(50, { message: "El apellido no puede exceder 50 caracteres" }),
+    email: z
+      .string()
+      .min(1, { message: "El correo electrónico es requerido" })
+      .email({ message: "Ingrese un correo electrónico válido" }),
+    phone: z
+      .string()
+      .min(1, { message: "El teléfono es requerido" })
+      .regex(/^\+?[0-9]{8,}$/, {
+        message: "Ingrese un número de teléfono válido",
+      }),
+    password: z
+      .string()
+      .min(6, { message: "La contraseña debe tener al menos 6 caracteres" }),
+    confirmPassword: z.string().min(1, { message: "Confirme la contraseña" }),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Las contraseñas no coinciden",
+    path: ["confirmPassword"],
+  });
 
 // Tipo para los valores del formulario
 type RegistrationFormValues = z.infer<typeof registrationFormSchema>;
@@ -78,10 +80,14 @@ interface RegisterUserFormProps {
   onSuccess?: () => void; // Callback opcional al completar registro
 }
 
-export function RegisterUserForm({ department, onSuccess }: RegisterUserFormProps) {
+export function RegisterUserForm({
+  department,
+  onSuccess,
+}: RegisterUserFormProps) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
+  const [showConfirmPassword, setShowConfirmPassword] =
+    useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
   const [registeredUser, setRegisteredUser] = useState<string | null>(null);
@@ -114,15 +120,15 @@ export function RegisterUserForm({ department, onSuccess }: RegisterUserFormProp
         password: data.password,
         confirmPassword: data.confirmPassword,
         department: department,
-        status: 'basic',
+        status: "basic",
         username: `user_${data.cedula}`,
       };
 
       const response = await registerUser(registrationData);
-      
+
       setSuccess(true);
       setRegisteredUser(`${data.nombre} ${data.apellido}`);
-      
+
       form.reset({
         cedula: "",
         nombre: "",
@@ -132,7 +138,7 @@ export function RegisterUserForm({ department, onSuccess }: RegisterUserFormProp
         password: "",
         confirmPassword: "",
       });
-      
+
       if (onSuccess) {
         onSuccess();
       }
@@ -150,8 +156,10 @@ export function RegisterUserForm({ department, onSuccess }: RegisterUserFormProp
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
-        <CardTitle className="text-xl">Registrar nuevo usuario</CardTitle>
-        <CardDescription>
+        <CardTitle className="text-xl text-center">
+          Registrar nuevo usuario
+        </CardTitle>
+        <CardDescription className="text-center">
           Departamento: {departmentLabels[department] || department}
         </CardDescription>
       </CardHeader>
@@ -160,7 +168,8 @@ export function RegisterUserForm({ department, onSuccess }: RegisterUserFormProp
           <div className="rounded-md bg-green-50 p-4 mb-6 flex items-center space-x-2 text-sm text-green-700">
             <CheckCircle className="h-5 w-5" />
             <span>
-              Usuario <strong>{registeredUser}</strong> registrado exitosamente en {departmentLabels[department] || department}.
+              Usuario <strong>{registeredUser}</strong> registrado exitosamente
+              en {departmentLabels[department] || department}.
             </span>
           </div>
         )}
@@ -196,11 +205,7 @@ export function RegisterUserForm({ department, onSuccess }: RegisterUserFormProp
                   <FormItem>
                     <FormLabel>Nombre</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="Ej: Juan"
-                        type="text"
-                        {...field}
-                      />
+                      <Input placeholder="Ej: Juan" type="text" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -214,11 +219,7 @@ export function RegisterUserForm({ department, onSuccess }: RegisterUserFormProp
                   <FormItem>
                     <FormLabel>Apellido</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="Ej: Pérez"
-                        type="text"
-                        {...field}
-                      />
+                      <Input placeholder="Ej: Pérez" type="text" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -324,7 +325,9 @@ export function RegisterUserForm({ department, onSuccess }: RegisterUserFormProp
                         variant="ghost"
                         size="icon"
                         className="absolute right-1 top-1 h-8 w-8"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        onClick={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }
                       >
                         {showConfirmPassword ? (
                           <EyeOff className="h-4 w-4" />
@@ -365,9 +368,11 @@ export function RegisterUserForm({ department, onSuccess }: RegisterUserFormProp
         </Form>
       </CardContent>
       <CardFooter className="flex justify-center text-xs text-muted-foreground">
-        <p>El usuario será registrado como usuario básico del departamento {departmentLabels[department] || department}</p>
+        <p className="text-center">
+          El usuario será registrado como usuario básico del departamento{" "}
+          {departmentLabels[department] || department}
+        </p>
       </CardFooter>
     </Card>
   );
 }
-

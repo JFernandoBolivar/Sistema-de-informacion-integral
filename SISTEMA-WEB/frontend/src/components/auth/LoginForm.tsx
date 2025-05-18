@@ -71,31 +71,36 @@ export function LoginForm() {
         cedula: data.cedula,
         password: data.password,
       });
-      
+
       setError(null);
-      
+
       // Determina la ruta según el rol del usuario
       let dashboardRoute = "/dashboard/oac";
-      
+
       if (response.status === "superAdmin" || response.status === "admin") {
         dashboardRoute = "/dashboard/oac/admin";
       }
-      
+
       // Redirección con breve pausa
       setTimeout(() => {
         router.push(dashboardRoute);
         // Almacena la última ruta válida
-        sessionStorage.setItem('lastValidRoute', dashboardRoute);
+        sessionStorage.setItem("lastValidRoute", dashboardRoute);
       }, 500);
-      
+
       return;
     } catch (err: any) {
       // Manejo de errores específicos de autenticación
       if (err && err.message) {
-        if (err.message.includes("inválidas") || 
-            err.message.includes("no encontrado")) {
+        if (
+          err.message.includes("inválidas") ||
+          err.message.includes("no encontrado")
+        ) {
           setError("Cédula o contraseña incorrecta");
-        } else if (err.message.includes("red") || err.message.includes("conexión")) {
+        } else if (
+          err.message.includes("red") ||
+          err.message.includes("conexión")
+        ) {
           setError("Error de conexión con el servidor. Intente más tarde.");
         } else {
           setError("Error al iniciar sesión: " + err.message);
@@ -110,7 +115,7 @@ export function LoginForm() {
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
-        <CardTitle className="text-2xl text-center">OAC Sistema</CardTitle>
+        <CardTitle className="text-2xl text-center">I2 Sistema</CardTitle>
         <CardDescription className="text-center">
           Ingrese sus credenciales para acceder
         </CardDescription>
@@ -187,16 +192,11 @@ export function LoginForm() {
                 "Iniciar Sesión"
               )}
             </Button>
-
-            <div className="text-xs text-muted-foreground mt-2 text-center">
-              <p>Para pruebas use:</p>
-              <p className="font-medium">Cédula: 12345678 | Contraseña: password123</p>
-            </div>
           </form>
         </Form>
       </CardContent>
       <CardFooter className="flex justify-center text-sm text-muted-foreground">
-        Sistema de Organización y Administración Comunitaria
+        Sistema de Información Integral © {new Date().getFullYear()}
       </CardFooter>
     </Card>
   );

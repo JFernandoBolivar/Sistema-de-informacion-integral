@@ -9,7 +9,7 @@ export default function Home() {
       <LoginForm />
 
       <div className="mt-8 text-center text-xs text-gray-500">
-        © {new Date().getFullYear()} Información Integral (I2). Todos los
+        © {new Date().getFullYear()} Información Integral Integral. Todos los
         derechos reservados.
       </div>
     </main>
