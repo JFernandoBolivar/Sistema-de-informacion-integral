@@ -3,7 +3,7 @@
 import { ReactNode, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
-import { MainNav } from "@/components/navigation/MainNav";
+import { Sidebar } from "@/components/navigation/Sidebar";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -11,7 +11,7 @@ interface DashboardLayoutProps {
 
 /**
  * Layout base para todas las rutas bajo /dashboard
- * - Incluye navegación compartida (MainNav)
+ * - Incluye navegación sidebar responsive
  * - Valida autenticación básica
  * - Mantiene estructura flex consistente
  * - Se hereda automáticamente por todas las rutas anidadas
@@ -45,17 +45,20 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     return null;
   }
 
-  // Usuario autenticado: mostrar layout completo con navegación
+  // Usuario autenticado: mostrar layout completo con navegación sidebar
   return (
-    <div className="flex flex-col min-h-screen">
-      <MainNav />
-      <main className="flex-grow p-6">
-        {children}
-      </main>
-      <footer className="bg-gray-100 p-4 text-center text-sm text-gray-500">
-        Sistema de Organización y Administración Comunitaria © {new Date().getFullYear()}
-      </footer>
+    <div className="flex min-h-screen bg-background">
+      <Sidebar />
+      <div className="flex flex-col flex-1">
+        <main className="flex-grow p-6 pt-16 lg:pt-6 overflow-auto">
+          <div className="container mx-auto max-w-7xl">
+            {children}
+          </div>
+        </main>
+        <footer className="bg-muted/50 p-4 text-center text-sm text-muted-foreground">
+          Sistema de Organización y Administración Comunitaria © {new Date().getFullYear()}
+        </footer>
+      </div>
     </div>
   );
 }
-

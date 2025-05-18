@@ -133,19 +133,19 @@
   .login-page-background {
     @apply min-h-screen bg-gradient-to-b from-background to-secondary/20;
   }
-  
+
   .login-logo {
     @apply w-24 h-24 md:w-32 md:h-32 rounded-full shadow-md transition-transform duration-300 hover:scale-105;
   }
-  
+
   .login-card {
     @apply shadow-lg hover:shadow-xl transition-shadow duration-300;
   }
-  
+
   .login-input {
     @apply transition-all duration-300 focus:border-primary/50;
   }
-  
+
   .login-button {
     @apply font-medium transition-all duration-300;
   }
