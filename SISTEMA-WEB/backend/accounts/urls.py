@@ -7,7 +7,7 @@ urlpatterns = [
     path('api/login/', LoginView.as_view(), name='login'),
     path('api/logout/', LogoutView.as_view(), name='logout'),
     
-    # User management endpoints
+    # manejo de usuario endpoints
     path('api/users/', UserUpdateView.as_view(), name='user-detail'),  # Get current user data
     path('api/users/<int:pk>/', UserUpdateView.as_view(), name='user-update'),  # Update specific user
 ]
